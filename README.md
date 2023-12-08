@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# c4c-messageboard
 
-## Getting Started
+This project is made for the Code4Community Fall 2023 technical challenge.
+It is a small anonymous chat proof of concept.
 
-First, run the development server:
+## Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+This is a Next.js server to serve trhe react frontend, and also uses
+a socket.io server for the realtime functionality - to automatically
+render new messages without the need for a page reload.
+
+This submission fulfuills the requirements as follows:
+
+-   Users can type in the input box, and send messages by pressing enter (up to 128 characters)
+-   Users cannot send empty messages
+-   Messages are sorted from most to least recent
+    -   The database query at the beginning returns messages sorted
+    -   All subsequent messages will be emitted by the socket in order
+-   All connected users should see the same list of messages
+
+### Bonus requirement: Persistence
+
+The server adds all sent messages into a database, so the message list
+will persist across server restarts.
+
+This is accomplished using a PostgreSQL docker container that runs in the background on port 5432.
+
+## Running
+
+Please follow these steps to run the server:
+
+Running this app requires node (with npm) and docker.
+
+The database password is written in [docker-compose-dev.yml](docker-compose-dev.yml) and is hardcoded to `"example"` (to be able to push a sensible compose file) -
+which should be changed for security reasons, both in that file and
+in `.env`.
+
+### Create `.env` file
+
+Create a file named `.env` in the root directory with the following content:
+
+```env
+DATABASE_URL="postgresql://postgres:<PASSWORD>@localhost:5432/postgres?schema=public"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```sh
+git clone https://github.com/dheerajpv/c4c-messageboard.git
+cd c4c-messageboard
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+npm i
+docker compose -f docker-compose-dev.yml up # to run the database
+npx prisma db push
+npx prisma generate
+```
 
-## Learn More
+### Development server
 
-To learn more about Next.js, take a look at the following resources:
+```sh
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Production server
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```sh
+npm run build
+npm run start
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+This server needs both port 3000 and 3001 to be open for the HTTP server and WS server respectively.
