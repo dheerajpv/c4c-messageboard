@@ -43,6 +43,8 @@ export default function Home() {
             <form
                 onSubmit={(e) => {
                     e.preventDefault();
+                    if (typed === "") return;
+
                     socket.emit("send", { content: typed });
                     setTyped("");
                 }}
