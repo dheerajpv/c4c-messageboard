@@ -5,9 +5,15 @@ import { useEffect, useState } from "react";
 import { Socket, io } from "socket.io-client";
 
 export default function Home() {
-    const [typed, setTyped] = useState("");
+    const [typed, setTyped] = useState(""); // the length of this is already a good proxy of if the user is typing
     const [messages, setMessages] = useState<Message[]>([]);
     const [socket, setSocket] = useState<Socket>();
+    const [typing, setTyping] = useState<number>(0);
+
+    const typingHandler = (n: number) => {
+        if (typed.length > 0) setTyping(n - 1);
+        else setTyping(n);
+    };
 
     useEffect(() => {
         (async () => {
@@ -17,12 +23,18 @@ export default function Home() {
             });
 
             s.on("message", (m: Message) => {
-                console.log("recieved ", m);
                 setMessages((old) => [m, ...old]);
+            });
+
+            s.on("users_typing", (n) => {
+                typingHandler(n);
             });
 
             setSocket(s);
         })();
+        // this should actually be an empty array, or the socket connection
+        // will happen each time the typing field changes!
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -46,6 +58,7 @@ export default function Home() {
                     if (typed === "") return;
 
                     socket.emit("send", { content: typed });
+                    socket.emit("typing_end");
                     setTyped("");
                 }}
             >
@@ -55,9 +68,22 @@ export default function Home() {
                     type="text"
                     placeholder="Send a message (enter to send)"
                     value={typed}
-                    onChange={(e) => setTyped(e.target.value)}
+                    onChange={(e) => {
+                        const value = e.target.value;
+
+                        if (value !== "") {
+                            socket.emit("typing");
+                        } else {
+                            socket.emit("typing_end");
+                        }
+
+                        setTyped(value);
+                    }}
                 />
             </form>
+            <p>
+                <b>{typing}</b> other users are typing right now!
+            </p>
 
             <section>
                 <p className="text-2xl text-bold text-black dark:text-white mb-2">

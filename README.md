@@ -18,12 +18,23 @@ This submission fulfuills the requirements as follows:
     -   All subsequent messages will be emitted by the socket in order
 -   All connected users should see the same list of messages
 
-### Bonus requirement: Persistence
+### Bonus feature: Persistence
 
 The server adds all sent messages into a database, so the message list
 will persist across server restarts.
 
 This is accomplished using a PostgreSQL docker container that runs in the background on port 5432.
+
+### Bonus feature: Typing Indicators
+
+The server keeps track of all the socket IDs that report themselves as typing, and gives that information
+back to the clients.
+
+If a client is typing - they should not be included in the typing number that is _visible to them_, so it
+gets subtracted out in that case.
+
+The client reports typing based on the length of the message input field. If it is non-empty, it reports as typing.
+If a message is sent, or the message input becomes empty again, it tells the server that it has finished typing.
 
 ## Running
 
